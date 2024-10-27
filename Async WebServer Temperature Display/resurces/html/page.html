@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>ESP Web Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <style>
+    /* Основные стили для страницы */
+    html {
+      font-family: Arial, Helvetica, sans-serif; /* Шрифт для всей страницы */
+      text-align: center; /* Выравнивание текста по центру */
+    }
+    h1 {
+      font-size: 1.8rem; /* Размер заголовка первого уровня */
+      color: white; /* Цвет заголовка h1 */
+    }
+    h2 {
+      font-size: 1.5rem; /* Размер заголовка второго уровня */
+      font-weight: bold; /* Жирный шрифт */
+      color: #143642; /* Цвет заголовка h2 */
+    }
+    .topnav {
+      overflow: hidden; /* Скрытие переполнения */
+      background-color: #143642; /* Цвет верхней навигационной панели */
+    }
+    body {
+      margin: 0; /* Убираем отступы у body */
+    }
+    .content {
+      padding: 30px; /* Отступы вокруг содержимого */
+      max-width: 600px; /* Максимальная ширина блока с контентом */
+      margin: 0 auto; /* Центрируем блок с контентом */
+    }
+    .card {
+      background-color: #F8F7F9; /* Цвет фона карточки */
+      box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5); /* Тень для карточки */
+      padding-top: 10px; /* Отступ сверху в карточке */
+      padding-bottom: 20px; /* Отступ снизу в карточке */
+    }
+    .state {
+      font-size: 1.5rem; /* Размер шрифта для отображения состояния */
+      color: #8c8c8c; /* Цвет текста состояния */
+      font-weight: bold; /* Жирный шрифт для состояния */
+    }
+  </style>
+</head>
+<body>
+  <div class="topnav">
+    <h1>ESP-S3 WebS</h1> <!-- Заголовок страницы -->
+  </div>
+  <div class="content">
+    <div class="card">
+      <h2>Текущая температура</h2> <!-- Заголовок для отображения текущей температуры -->
+      <p class="state">Значение температуры: <span id="state">%STATE%&degC</span></p> <!-- Место для отображения значения температуры -->
+    </div>
+  </div>
+  
+  <script>
+    // Указываем адрес WebSocket сервера
+    var gateway = `ws://${window.location.hostname}/ws`;
+    var websocket;
+
+    // Функция для инициализации WebSocket соединения
+    function initWebSocket() {
+      console.log('Попытка открыть WebSocket соединение...');
+      websocket = new WebSocket(gateway); // Создаем новое WebSocket соединение
+      websocket.onopen = onOpen; // Обработчик при открытии соединения
+      websocket.onclose = onClose; // Обработчик при закрытии соединения
+      websocket.onmessage = onMessage; // Обработчик при получении сообщения
+    }
+
+    // Функция, которая вызывается при успешном открытии соединения
+    function onOpen(event) {
+      console.log('Соединение открыто');
+    }
+
+    // Функция, которая вызывается при закрытии соединения
+    function onClose(event) {
+      console.log('Соединение закрыто');
+      setTimeout(initWebSocket, 2000); // Пытаемся восстановить соединение через 2 секунды
+    }
+
+    // Функция для обработки полученных сообщений
+    function onMessage(event) {
+      var state = event.data; // Получаем данные из сообщения
+      document.getElementById('state').innerHTML = state; // Обновляем значение температуры на странице
+    }
+
+    // Функция, которая вызывается при загрузке страницы
+    window.addEventListener('load', onLoad);
+    
+    function onLoad(event) {
+      initWebSocket(); // Инициализируем WebSocket при загрузке страницы
+      initButton(); // Инициализируем кнопку при загрузке страницы
+    }
+
+    // Функция для инициализации кнопки
+    function initButton() {
+      document.getElementById('button').addEventListener('click', toggle); // Добавляем обработчик клика на кнопку
+    }
+
+    // Функция для переключения состояния (например, включение/выключение)
+    function toggle() {
+      websocket.send('toggle'); // Отправляем команду 'toggle' на сервер
+    }
+  </script>
+</body>
+</html>
